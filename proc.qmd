@@ -1,0 +1,127 @@
+---
+title: "Proc"
+format: html
+author: Javiera Romo-Sánchez
+editor: source
+---
+
+Este código es en el marco del procesamiento de la Encuesta Conclat, y sirve para realizar la conversion de variables de ingreso que estaban originalmente en monedas locales a USD nominal y real. 
+
+# Preparar
+
+```{r}
+rm(list=ls())
+options(scipen = 999)
+
+library(pacman)
+p_load(dplyr, summarytools, tidyverse)
+
+proc <- readRDS("input/data-conclat-cl-ES.rds")
+```
+
+1. CHILE
+
+### Crear: a33_usd_nominal
+
+```{r}
+
+# Extraer mes
+proc$mes_encuesta <- as.numeric(format(proc$vstart, "%m"))
+
+table(proc$mes_encuesta)
+
+# Crear variable con informacion de cambio
+
+proc <- proc %>% mutate(cambio_mes = case_when(mes_encuesta == 11 ~  971.6,
+                                               mes_encuesta == 12 ~ 982.3,
+                                               mes_encuesta == 1 ~ 1000.76,
+                                               TRUE ~ NA_real_))
+table(proc$cambio_mes)
+
+# Crear a33_usd_nominal
+
+proc <- proc %>% mutate(a33_usd_nominal = case_when(is.na(cambio_mes) ~ NA_real_,
+                                                    a33 == -999 ~  -999,
+                                                    TRUE ~ (a33/cambio_mes)))
+
+freq(proc$a33_usd_nominal)
+
+proc <- proc %>% 
+  select(-cambio_mes) %>% 
+  relocate(a33_usd_nominal, .after = a33)
+
+```
+
+
+### Crear: a33_usd_ppp
+
+```{r}
+
+# Crear a33_usd_ppp
+
+proc <- proc %>% mutate(a33_usd_ppp = case_when(is.na(a33) ~ NA_real_,
+                                                    a33 == -999 ~  -999,
+                                                    TRUE ~ (a33/435.78)))
+
+freq(proc$a33_usd_ppp)
+
+proc <- proc %>% 
+  relocate(a33_usd_ppp, .after = a33_usd_nominal)
+
+```
+
+2. ARGENTINA
+
+### Crear: a33_usd_nominal
+
+```{r}
+
+# Extraer mes
+proc$mes_encuesta <- as.numeric(format(proc$vstart, "%m"))
+
+table(proc$mes_encuesta)
+
+# Crear variable con informacion de cambio
+
+proc <- proc %>% mutate(cambio_mes = case_when(mes_encuesta == 4 ~  1121.56,
+                                               mes_encuesta == 5 ~ 1147.52,
+                                               mes_encuesta == 6 ~ 1181.35,
+                                               mes_encuesta == 7 ~ 1267.02,
+                                               mes_encuesta == 8 ~ 1329.53,
+                                               mes_encuesta == 9 ~ 1399.89,
+                                               TRUE ~ NA_real_))
+table(proc$cambio_mes)
+
+# Crear a33_usd_nominal
+
+proc <- proc %>% mutate(a33_usd_nominal = case_when(is.na(cambio_mes) ~ NA_real_,
+                                                    a33 == -999 ~  -999,
+                                                    a33 == -888 ~  -888,
+                                                    TRUE ~ (a33/cambio_mes)))
+
+freq(proc$a33_usd_nominal)
+
+proc <- proc %>% 
+  select(-cambio_mes) %>% 
+  relocate(a33_usd_nominal, .after = a33)
+
+```
+
+
+### Crear: a33_usd_ppp
+
+```{r}
+
+# Crear a33_usd_ppp
+
+proc <- proc %>% mutate(a33_usd_ppp = case_when(is.na(a33) ~ NA_real_,
+                                                    a33 == -999 ~  -999,
+                                                    a33 == -888 ~  -888,
+                                                    TRUE ~ (a33/567.3)))
+
+freq(proc$a33_usd_ppp)
+
+proc <- proc %>% 
+  relocate(a33_usd_ppp, .after = a33_usd_nominal)
+
+```
